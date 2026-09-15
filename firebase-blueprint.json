@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "ClassData": {
+      "title": "ClassData",
+      "description": "Consolidated class cash book and dues data for real-time multi-device synchronization",
+      "type": "object",
+      "properties": {
+        "classConfig": {
+          "type": "object",
+          "description": "Class configuration and PIN settings"
+        },
+        "students": {
+          "type": "array",
+          "description": "List of registered students"
+        },
+        "jimpitanRecords": {
+          "type": "array",
+          "description": "List of student dues records"
+        },
+        "transactions": {
+          "type": "array",
+          "description": "List of cash in and cash out transactions"
+        },
+        "savingsGoals": {
+          "type": "array",
+          "description": "List of class savings targets"
+        },
+        "lastBackupDate": {
+          "type": "string",
+          "description": "Last backup date"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["classConfig", "students", "jimpitanRecords", "transactions"]
+    }
+  },
+  "firestore": {
+    "/classes/{classId}": {
+      "schema": "ClassData",
+      "description": "Collection of synchronized class cash book datasets"
+    }
+  }
+}

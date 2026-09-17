@@ -10,21 +10,19 @@ import {
   AlertCircle,
   Share2,
   Calendar,
-  Lock,
   Sparkles,
   ImageIcon,
   BarChart3,
-  Layers,
-  ChevronDown,
-  ChevronUp,
   CalendarDays,
-  UserX,
-  UserCheck,
+  ChevronLeft,
+  ChevronRight,
+  Users,
 } from 'lucide-react';
 import { AppState, TotalsInfo, StudentSummaryMetric, ExpenseCategory, IncomeCategory } from '../types';
 import { formatRupiah, formatDateIndo, getCategoryLabel, getTodayDateStr } from '../services/utils';
 import { MonthlyKasCard } from './MonthlyKasCard';
 import { MonthlyFinanceChart } from './MonthlyFinanceChart';
+import { SakuraFallingCanvas } from './SakuraFallingCanvas';
 
 interface WaliMuridViewProps {
   state: AppState;
@@ -43,10 +41,19 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
   syncStatus,
   lastSyncedAt,
 }) => {
+  // Slide Switcher: 0 = Dashboard Total (Kas Umum, Transaksi, Grafik), 1 = Dashboard Iuran (Progress & Status Per Bulan sampai bawah)
+  const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [activeTabSection, setActiveTabSection] = useState<'bulanan' | 'rincian' | 'grafik'>('bulanan');
+  const [totalSubTab, setTotalSubTab] = useState<'rincian' | 'grafik'>('rincian');
+
+  const activeStudentsCount = totals.activeStudentsCount || state.students.filter((s) => s.isActive).length;
+  const currentMonthLabel = totals.currentMonthLabel || 'Bulan Ini';
+  const defaultKasAmount = state.classConfig.defaultAmount || 10000;
+  const monthCollected = totals.jimpitanThisMonth ?? totals.jimpitanTotal;
+  const monthTarget = activeStudentsCount * defaultKasAmount;
+  const monthProgress = totals.thisMonthProgress ?? (monthTarget > 0 ? Math.min(100, Math.round((monthCollected / monthTarget) * 100)) : 0);
 
   // Breakdown by expense category
   const expenseByCategory = useMemo(() => {
@@ -85,8 +92,6 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
   // WhatsApp report message generator
   const reportMessage = useMemo(() => {
     const today = getTodayDateStr();
-    const activeStudentsCount = state.students.filter((s) => s.isActive).length;
-
     const lines: string[] = [
       `📢 *LAPORAN TRANSPARANSI KAS KELAS*`,
       `🏫 *${state.classConfig.className}* - ${state.classConfig.schoolName}`,
@@ -100,7 +105,7 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
       `     - Iuran Kas Siswa: ${formatRupiah(totals.jimpitanTotal)}`,
       `     - Pemasukan Lain: ${formatRupiah(totals.directIncome)}`,
       `   • Total Pengeluaran: ${formatRupiah(totals.totalExpense)}`,
-      `   • Status Bulan Ini (${totals.currentMonthLabel || 'Bulan Ini'}): ${totals.thisMonthPaidCount ?? 0}/${activeStudentsCount} Siswa Lunas (${totals.thisMonthProgress ?? 0}%)`,
+      `   • Status Bulan Ini (${currentMonthLabel}): ${totals.thisMonthPaidCount ?? 0}/${activeStudentsCount} Siswa Lunas (${monthProgress}%)`,
       `-----------------------------------------`,
       `🧾 *5 Transaksi Terakhir:*`,
     ];
@@ -119,7 +124,7 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
     );
 
     return lines.join('\n');
-  }, [state, totals]);
+  }, [state, totals, currentMonthLabel, activeStudentsCount, monthProgress]);
 
   const handleShareWA = () => {
     const encoded = encodeURIComponent(reportMessage);
@@ -133,337 +138,436 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 max-w-4xl mx-auto">
-      {/* 1. Mobile-First Class Header & Live Status */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
-                Wali Murid & Guru
-              </span>
-              <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Live Sync</span>
+      {/* 2. Main Slide Switcher Tabs (Slide 1 vs Slide 2) */}
+      <div className="bg-slate-200/90 p-1 rounded-2xl flex items-center justify-between gap-1 shadow-xs border border-slate-300/60">
+        <button
+          onClick={() => setActiveSlide(0)}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 ${
+            activeSlide === 0
+              ? 'bg-teal-800 text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <Wallet className="w-4 h-4 text-teal-300" />
+          <span>Slide 1: Dashboard Total</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSlide(1)}
+          className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 ${
+            activeSlide === 1
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <Coins className="w-4 h-4 text-amber-200" />
+          <span>Slide 2: Dashboard Iuran</span>
+          {totals.thisMonthUnpaidCount > 0 && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-black ${
+                activeSlide === 1 ? 'bg-amber-900 text-amber-100' : 'bg-amber-200 text-amber-900'
+              }`}
+            >
+              {totals.thisMonthUnpaidCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* SLIDE 1: HANYA MENAMPILKAN DASHBOARD TOTAL, TRANSAKSI, & GRAFIK           */}
+      {/* ========================================================================= */}
+      {activeSlide === 0 && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          {/* Main Financial Summary Hero Card with Japanese Sakura Falling Screensaver Theme */}
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-rose-950/80 to-slate-900 text-white p-4 sm:p-6 shadow-xl border border-rose-500/30 relative overflow-hidden">
+            {/* Japanese Sakura Screensaver Falling Petals & Fuji Silhouette */}
+            <SakuraFallingCanvas />
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between text-rose-200 text-xs mb-1">
+                <span className="font-semibold flex items-center gap-1.5 bg-rose-950/60 px-2.5 py-1 rounded-full border border-rose-500/30 backdrop-blur-xs">
+                  <span className="text-sm">🌸</span>
+                  <Wallet className="w-3.5 h-3.5 text-rose-300" />
+                  <span>Total Saldo Kas Kelas</span>
+                  <span className="text-[10px] text-rose-300/80 font-normal">桜 • Sakura Theme</span>
+                </span>
+                <span className="text-[10px] bg-rose-900/50 border border-rose-400/30 px-2 py-0.5 rounded-full backdrop-blur-xs font-medium text-rose-200">
+                  {lastSyncedAt
+                    ? `Update ${lastSyncedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                    : 'Real-Time'}
+                </span>
+              </div>
+
+              <div className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-1.5 drop-shadow-[0_2px_8px_rgba(244,63,94,0.35)]">
+                {formatRupiah(totals.balance)}
+              </div>
+
+              {/* Quick 3-Column Summary Cards with Glassmorphism Sakura Touch */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3 border-t border-rose-500/20">
+                <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+                  <div className="flex items-center gap-1 text-emerald-200 text-[10px] sm:text-[11px] font-medium">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="truncate">Total Masuk</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-emerald-300 mt-0.5 truncate">
+                    +{formatRupiah(totals.totalIncome)}
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+                  <div className="flex items-center gap-1 text-rose-200 text-[10px] sm:text-[11px] font-medium">
+                    <TrendingDown className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span className="truncate">Pengeluaran</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-rose-300 mt-0.5 truncate">
+                    -{formatRupiah(totals.totalExpense)}
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+                  <div className="flex items-center gap-1 text-amber-200 text-[10px] sm:text-[11px] font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                    <span className="truncate">Kas Bebas</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-white mt-0.5 truncate">
+                    {formatRupiah(totals.unallocatedCash)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Share to WA Button & Slide 2 Quick Link */}
+              <div className="mt-3.5 flex items-center gap-2">
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition active:scale-95 border border-emerald-400/30"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Bagikan Laporan Kas ke WhatsApp</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveSlide(1)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 font-bold text-xs backdrop-blur-md transition active:scale-95 shrink-0 border border-rose-400/30"
+                >
+                  <span>Cek Iuran</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
-            <h1 className="text-base sm:text-xl font-black text-slate-900 mt-1 truncate">
-              {state.classConfig.className}
-            </h1>
-            <p className="text-xs text-slate-500 truncate">
-              {state.classConfig.schoolName} • TA {state.classConfig.academicYear}
-            </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Sub-tabs for Dashboard Total (Rincian Transaksi Kas & Grafik Arus Kas) */}
+          <div className="grid grid-cols-2 bg-slate-200/80 p-1 rounded-xl gap-1">
             <button
-              onClick={onRequestAdminLogin}
-              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition active:scale-95"
-              title="Masuk sebagai Bendahara atau Admin Kelas"
+              onClick={() => setTotalSubTab('rincian')}
+              className={`py-2 px-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                totalSubTab === 'rincian'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              <Lock className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden xs:inline">Login</span>
-              <span>Pengurus</span>
+              <Receipt className="w-4 h-4 text-teal-700" />
+              <span>Daftar Transaksi Kas ({filteredTransactions.length})</span>
+            </button>
+
+            <button
+              onClick={() => setTotalSubTab('grafik')}
+              className={`py-2 px-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                totalSubTab === 'grafik'
+                  ? 'bg-white text-indigo-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4 text-indigo-600" />
+              <span>Grafik Arus & Kategori</span>
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* 2. Main Financial Summary Hero Card */}
-      <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-teal-900 via-teal-800 to-slate-900 text-white p-4 sm:p-6 shadow-md border border-teal-700/40 relative overflow-hidden">
-        <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-teal-500/10 blur-2xl pointer-events-none" />
+          {/* TAB: Rincian Transaksi */}
+          {totalSubTab === 'rincian' && (
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  <span>Daftar Transaksi Kas Masuk & Keluar</span>
+                  <span className="text-xs text-slate-400 font-normal">({filteredTransactions.length})</span>
+                </h3>
 
-        <div className="relative z-10">
-          <div className="flex items-center justify-between text-teal-200 text-xs mb-1">
-            <span className="font-semibold flex items-center gap-1.5">
-              <Wallet className="w-4 h-4 text-teal-300" />
-              Total Saldo Kas Tersedia
-            </span>
-            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-xs">
-              {lastSyncedAt ? `Update ${lastSyncedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` : 'Real-Time'}
-            </span>
-          </div>
-
-          <div className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-1">
-            {formatRupiah(totals.balance)}
-          </div>
-
-          {/* Quick 3-Column Summary Cards */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3 border-t border-teal-700/50">
-            <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
-              <div className="flex items-center gap-1 text-teal-200 text-[10px] sm:text-[11px] font-medium">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span className="truncate">Total Masuk</span>
+                {/* Filter Buttons */}
+                <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg shrink-0">
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                      filterType === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                    }`}
+                  >
+                    Semua
+                  </button>
+                  <button
+                    onClick={() => setFilterType('income')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                      filterType === 'income' ? 'bg-emerald-600 text-white' : 'text-slate-500'
+                    }`}
+                  >
+                    + Masuk
+                  </button>
+                  <button
+                    onClick={() => setFilterType('expense')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                      filterType === 'expense' ? 'bg-rose-600 text-white' : 'text-slate-500'
+                    }`}
+                  >
+                    - Keluar
+                  </button>
+                </div>
               </div>
-              <div className="text-xs sm:text-base font-bold text-emerald-300 mt-0.5 truncate">
-                +{formatRupiah(totals.totalIncome)}
-              </div>
-            </div>
 
-            <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
-              <div className="flex items-center gap-1 text-rose-200 text-[10px] sm:text-[11px] font-medium">
-                <TrendingDown className="w-3.5 h-3.5 text-rose-300 shrink-0" />
-                <span className="truncate">Pengeluaran</span>
-              </div>
-              <div className="text-xs sm:text-base font-bold text-rose-300 mt-0.5 truncate">
-                -{formatRupiah(totals.totalExpense)}
-              </div>
-            </div>
+              {filteredTransactions.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs bg-slate-50 rounded-xl">
+                  Belum ada riwayat transaksi pada kategori ini.
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {filteredTransactions.map((tx) => {
+                    const isIncome = tx.type === 'income';
+                    const cat = getCategoryLabel(tx.category);
 
-            <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
-              <div className="flex items-center gap-1 text-amber-200 text-[10px] sm:text-[11px] font-medium">
-                <CalendarDays className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                <span className="truncate">Bulan Ini</span>
-              </div>
-              <div className="text-xs sm:text-base font-bold text-amber-300 mt-0.5 truncate">
-                {totals.thisMonthPaidCount ?? 0}/{totals.activeStudentsCount} Lunas
-              </div>
-            </div>
-          </div>
+                    return (
+                      <div key={tx.id} className="py-3 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 border mt-0.5 ${
+                              isIncome
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border-rose-200'
+                            }`}
+                          >
+                            {cat.icon}
+                          </div>
 
-          {/* Share to WA Button */}
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="w-full mt-3.5 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition active:scale-95"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>Bagikan Laporan Kas ke WhatsApp Grup</span>
-          </button>
-        </div>
-      </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-xs sm:text-sm font-bold text-slate-900">{tx.title}</p>
+                              {tx.receiptImage && (
+                                <button
+                                  onClick={() => setSelectedReceipt(tx.receiptImage!)}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100"
+                                >
+                                  <ImageIcon className="w-3 h-3" />
+                                  <span>Nota Bukti</span>
+                                </button>
+                              )}
+                            </div>
 
-      {/* 3. Navigation Toggle Tabs for Parents */}
-      <div className="grid grid-cols-3 bg-slate-200/80 p-1 rounded-xl gap-1">
-        <button
-          onClick={() => setActiveTabSection('bulanan')}
-          className={`py-2 px-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-            activeTabSection === 'bulanan'
-              ? 'bg-white text-teal-900 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <CalendarDays className="w-4 h-4 text-teal-600" />
-          <span className="truncate">Iuran Bulanan</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTabSection('rincian')}
-          className={`py-2 px-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-            activeTabSection === 'rincian'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Receipt className="w-4 h-4 text-slate-700" />
-          <span className="truncate">Rincian Kas</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTabSection('grafik')}
-          className={`py-2 px-1 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-            activeTabSection === 'grafik'
-              ? 'bg-white text-indigo-900 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4 text-indigo-600" />
-          <span className="truncate">Grafik & Kategori</span>
-        </button>
-      </div>
-
-      {/* 4A. TAB 1: IURAN PER BULAN & CEK BELUM SETORAN */}
-      {activeTabSection === 'bulanan' && (
-        <MonthlyKasCard
-          state={state}
-          isAdmin={false}
-          title="Status Iuran Kas Per Bulan & Daftar Belum Setoran"
-          subtitle="Pilih bulan untuk melihat siapa saja yang sudah lunas atau belum menyetor kas"
-        />
-      )}
-
-      {/* 4B. TAB 2: RINCIAN TRANSAKSI KAS */}
-      {activeTabSection === 'rincian' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-              <span>Daftar Transaksi Kas Masuk & Keluar</span>
-              <span className="text-xs text-slate-400 font-normal">({filteredTransactions.length})</span>
-            </h3>
-
-            {/* Filter Buttons */}
-            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg shrink-0">
-              <button
-                onClick={() => setFilterType('all')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
-                  filterType === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
-                }`}
-              >
-                Semua
-              </button>
-              <button
-                onClick={() => setFilterType('income')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
-                  filterType === 'income' ? 'bg-emerald-600 text-white' : 'text-slate-500'
-                }`}
-              >
-                + Masuk
-              </button>
-              <button
-                onClick={() => setFilterType('expense')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
-                  filterType === 'expense' ? 'bg-rose-600 text-white' : 'text-slate-500'
-                }`}
-              >
-                - Keluar
-              </button>
-            </div>
-          </div>
-
-          {filteredTransactions.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-xs bg-slate-50 rounded-xl">
-              Belum ada riwayat transaksi pada kategori ini.
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {filteredTransactions.map((tx) => {
-                const isIncome = tx.type === 'income';
-                const cat = getCategoryLabel(tx.category);
-
-                return (
-                  <div key={tx.id} className="py-3 flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-2.5 min-w-0">
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 border mt-0.5 ${
-                          isIncome
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border-rose-200'
-                        }`}
-                      >
-                        {cat.icon}
-                      </div>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900">{tx.title}</p>
-                          {tx.receiptImage && (
-                            <button
-                              onClick={() => setSelectedReceipt(tx.receiptImage!)}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100"
-                            >
-                              <ImageIcon className="w-3 h-3" />
-                              <span>Nota Bukti</span>
-                            </button>
-                          )}
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                {formatDateIndo(tx.date)}
+                              </span>
+                              {tx.recipientOrSource && <span>• {tx.recipientOrSource}</span>}
+                              {tx.note && <span className="text-slate-400 italic">"{tx.note}"</span>}
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {formatDateIndo(tx.date)}
-                          </span>
-                          {tx.recipientOrSource && <span>• {tx.recipientOrSource}</span>}
-                          {tx.note && <span className="text-slate-400 italic">"{tx.note}"</span>}
+                        <div className="text-right shrink-0">
+                          <div
+                            className={`text-xs sm:text-sm font-bold ${
+                              isIncome ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
+                          >
+                            {isIncome ? '+' : '-'} {formatRupiah(tx.amount)}
+                          </div>
+                          <span className="text-[10px] text-slate-400">{cat.label}</span>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Grafik & Kategori */}
+          {totalSubTab === 'grafik' && (
+            <div className="space-y-4">
+              <MonthlyFinanceChart state={state} />
+
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs">
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-teal-100 text-teal-800">
+                      <BarChart3 className="w-4 h-4" />
                     </div>
+                    <h2 className="text-sm font-bold text-slate-900">Perbandingan Arus Kas</h2>
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium">Persentase</span>
+                </div>
 
-                    <div className="text-right shrink-0">
-                      <div
-                        className={`text-xs sm:text-sm font-bold ${
-                          isIncome ? 'text-emerald-600' : 'text-rose-600'
-                        }`}
-                      >
-                        {isIncome ? '+' : '-'} {formatRupiah(tx.amount)}
-                      </div>
-                      <span className="text-[10px] text-slate-400">{cat.label}</span>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-emerald-700 flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                      Kas Masuk ({incomePercent}%)
+                    </span>
+                    <span className="text-rose-700 flex items-center gap-1">
+                      Pengeluaran ({expensePercent}%)
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                    </span>
+                  </div>
+
+                  <div className="w-full h-3 rounded-full bg-slate-100 flex overflow-hidden border border-slate-200">
+                    <div
+                      className="bg-emerald-500 h-full transition-all duration-500"
+                      style={{ width: `${incomePercent}%` }}
+                      title={`Kas Masuk: ${formatRupiah(totals.totalIncome)}`}
+                    />
+                    <div
+                      className="bg-rose-500 h-full transition-all duration-500"
+                      style={{ width: `${expensePercent}%` }}
+                      title={`Pengeluaran: ${formatRupiah(totals.totalExpense)}`}
+                    />
+                  </div>
+                </div>
+
+                {expenseByCategory.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-slate-100 space-y-2.5">
+                    <h3 className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>Rincian Kategori Pengeluaran</span>
+                      <span className="text-slate-400 font-normal">Total {formatRupiah(totals.totalExpense)}</span>
+                    </h3>
+
+                    <div className="space-y-2">
+                      {expenseByCategory.map((cat) => (
+                        <div key={cat.category} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-700 font-medium flex items-center gap-1.5">
+                              <span>{cat.meta.icon}</span>
+                              <span>{cat.meta.label}</span>
+                            </span>
+                            <span className="font-bold text-slate-900">
+                              {formatRupiah(cat.amount)} <span className="text-slate-400 font-normal">({cat.percentage}%)</span>
+                            </span>
+                          </div>
+                          <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-slate-700"
+                              style={{ width: `${cat.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                );
-              })}
+                )}
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* 4C. TAB 3: GRAFIK & KATEGORI PENGELUARAN */}
-      {activeTabSection === 'grafik' && (
-        <div className="space-y-4">
-          {/* Visual Recharts Kas Trend */}
-          <MonthlyFinanceChart state={state} />
+      {/* ========================================================================= */}
+      {/* SLIDE 2: STATUS IURAN KAS PER BULAN & DAFTAR BELUM SETOR SAMPAI KEBAWAH   */}
+      {/* ========================================================================= */}
+      {activeSlide === 1 && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          {/* Dashboard Iuran Hero Card */}
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-950 via-amber-900 to-slate-950 text-white p-4 sm:p-6 shadow-md border border-amber-700/40 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl pointer-events-none" />
 
-          {/* Arus Kas Masuk vs Keluar Bar */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-teal-100 text-teal-800">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <h2 className="text-sm font-bold text-slate-900">Perbandingan Arus Kas</h2>
-              </div>
-              <span className="text-[11px] text-slate-500 font-medium">Persentase</span>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-700 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                  Kas Masuk ({incomePercent}%)
+            <div className="relative z-10">
+              <div className="flex items-center justify-between text-amber-200 text-xs mb-1">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Coins className="w-4 h-4 text-amber-300" />
+                  Dashboard Iuran Kas ({currentMonthLabel})
                 </span>
-                <span className="text-rose-700 flex items-center gap-1">
-                  Pengeluaran ({expensePercent}%)
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                <span className="text-[10px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full font-medium">
+                  Tarif: {formatRupiah(defaultKasAmount)} / siswa
                 </span>
               </div>
 
-              <div className="w-full h-3 rounded-full bg-slate-100 flex overflow-hidden border border-slate-200">
-                <div
-                  className="bg-emerald-500 h-full transition-all duration-500"
-                  style={{ width: `${incomePercent}%` }}
-                  title={`Kas Masuk: ${formatRupiah(totals.totalIncome)}`}
-                />
-                <div
-                  className="bg-rose-500 h-full transition-all duration-500"
-                  style={{ width: `${expensePercent}%` }}
-                  title={`Pengeluaran: ${formatRupiah(totals.totalExpense)}`}
-                />
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl sm:text-4xl font-black tracking-tight text-amber-300">
+                  {formatRupiah(monthCollected)}
+                </span>
+                <span className="text-xs sm:text-sm text-amber-200/80 font-medium">
+                  terkumpul bulan ini
+                </span>
               </div>
-            </div>
 
-            {/* Expense Category Breakdown Bars */}
-            {expenseByCategory.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-slate-100 space-y-2.5">
-                <h3 className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                  <span>Rincian Kategori Pengeluaran</span>
-                  <span className="text-slate-400 font-normal">Total {formatRupiah(totals.totalExpense)}</span>
-                </h3>
+              {/* Visual Progress Bar of Monthly Collection */}
+              <div className="mt-3 bg-black/25 p-2.5 sm:p-3 rounded-xl border border-white/10 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-amber-200 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Capaian Iuran: {totals.thisMonthPaidCount ?? 0} dari {activeStudentsCount} Siswa
+                  </span>
+                  <span className="font-bold text-amber-300">{monthProgress}% Lunas</span>
+                </div>
 
-                <div className="space-y-2">
-                  {expenseByCategory.map((cat) => (
-                    <div key={cat.category} className="space-y-1">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-700 font-medium flex items-center gap-1.5">
-                          <span>{cat.meta.icon}</span>
-                          <span>{cat.meta.label}</span>
-                        </span>
-                        <span className="font-bold text-slate-900">
-                          {formatRupiah(cat.amount)} <span className="text-slate-400 font-normal">({cat.percentage}%)</span>
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-slate-700"
-                          style={{ width: `${cat.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="w-full h-2.5 rounded-full bg-white/15 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-700 rounded-full"
+                    style={{ width: `${monthProgress}%` }}
+                  />
                 </div>
               </div>
-            )}
+
+              {/* 3-Column Specific Breakdown for Iuran */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3">
+                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-1 text-emerald-200 text-[10px] sm:text-[11px] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                    <span className="truncate">Sudah Lunas</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-emerald-300 mt-0.5 truncate">
+                    {totals.thisMonthPaidCount ?? 0} Siswa
+                  </div>
+                  <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">
+                    {formatRupiah((totals.thisMonthPaidCount ?? 0) * defaultKasAmount)}
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-1 text-rose-200 text-[10px] sm:text-[11px] font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                    <span className="truncate">Belum Setor</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-rose-300 mt-0.5 truncate">
+                    {totals.thisMonthUnpaidCount ?? 0} Siswa
+                  </div>
+                  <div className="text-[10px] text-rose-200/80 mt-0.5 truncate">
+                    Sisa: {formatRupiah((totals.thisMonthUnpaidCount ?? 0) * defaultKasAmount)}
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-1 text-amber-200 text-[10px] sm:text-[11px] font-medium">
+                    <Users className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                    <span className="truncate">Total Siswa</span>
+                  </div>
+                  <div className="text-xs sm:text-base font-bold text-white mt-0.5 truncate">
+                    {activeStudentsCount} Orang
+                  </div>
+                  <div className="text-[10px] text-amber-300/80 mt-0.5 truncate">
+                    Kelas Aktif
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Full Monthly Jimpitan & Belum Setoran Component (Sampai Kebawah) */}
+          <MonthlyKasCard
+            state={state}
+            isAdmin={false}
+            title="Status Iuran Kas Per Bulan & Daftar Belum Setoran"
+            subtitle="Pilih bulan untuk melihat siapa saja yang sudah lunas atau belum menyetor kas"
+          />
         </div>
       )}
 
-      {/* 5. Footer Notice */}
+      {/* 4. Footer Notice */}
       <div className="text-center py-4 text-xs text-slate-400">
         <p>Aplikasi Pembukuan & Transparansi Kas Kelas</p>
         <p className="text-[11px] mt-0.5">

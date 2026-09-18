@@ -96,6 +96,33 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{todayStr}</span>
           </div>
 
+          {/* Instant Reload / Refresh App Button */}
+          <button
+            onClick={async () => {
+              try {
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  for (const reg of regs) {
+                    await reg.unregister();
+                  }
+                }
+                if ('caches' in window) {
+                  const keys = await caches.keys();
+                  for (const key of keys) {
+                    await caches.delete(key);
+                  }
+                }
+              } catch {
+                // ignore
+              }
+              window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+            }}
+            className="p-1.5 sm:p-2 text-slate-600 hover:text-teal-700 hover:bg-slate-100 rounded-lg transition border border-slate-200"
+            title="Muat Ulang / Perbarui Aplikasi Versi Terbaru"
+          >
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 hover:text-teal-700 hover:rotate-180 transition-transform duration-500" />
+          </button>
+
           {/* Admin PIN Lock Status Toggle */}
           {isAdminUnlocked ? (
             <button

@@ -215,6 +215,15 @@ export function App() {
                     markAllPaidForDate(new Date().toISOString().split('T')[0]);
                   });
                 }}
+                onToggleMonthlyStatus={(studentId, month, customAmt, method) => {
+                  requireAdmin(() => toggleMonthlyJimpitanStatus(studentId, month, customAmt, method));
+                }}
+                onMarkAllPaidMonth={(month, method) => {
+                  requireAdmin(() => markAllPaidForMonth(month, method));
+                }}
+                onResetMonth={(month) => {
+                  requireAdmin(() => resetRecordsForMonth(month));
+                }}
               />
             )}
 

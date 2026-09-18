@@ -251,7 +251,7 @@ export function generateMonthlyUnpaidWhatsAppMessage(
     `🔗 *Cek Laporan Transparansi Lengkap:*`,
     window.location.href,
     ``,
-    `_Pesan otomatis dari Sistem Kas & Jimpitan Sekolah._`
+    `_Pesan otomatis dari Sistem Pembukuan Kas Sekolah._`
   );
 
   return lines.join('\n');

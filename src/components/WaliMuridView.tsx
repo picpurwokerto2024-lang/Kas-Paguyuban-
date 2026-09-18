@@ -120,7 +120,7 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
       `🔗 *Cek Laporan Lengkap & Status Iuran Siswa:*`,
       window.location.href,
       ``,
-      `_Laporan ini dibuat otomatis oleh Sistem Kas & Jimpitan Sekolah_`
+      `_Laporan ini dibuat otomatis oleh Sistem Pembukuan Kas Sekolah_`
     );
 
     return lines.join('\n');

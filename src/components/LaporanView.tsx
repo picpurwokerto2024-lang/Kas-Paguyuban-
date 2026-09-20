@@ -273,37 +273,39 @@ export const LaporanView: React.FC<LaporanViewProps> = ({ state, totals, student
       {/* 3. Printable Report Document Section (Pure Official Document) */}
       <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none">
         
-        {/* Printable Official School Kop Surat */}
-        <div className="text-center pb-4 mb-5 border-b-[3px] border-double border-slate-900">
-          <div className="flex items-center justify-center gap-3 mb-1">
-            <div className="text-center">
-              <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-wider font-serif">
-                {state.classConfig.schoolName || 'SMP MUHAMKA'}
-              </h3>
-              <p className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide">
-                PAGUYUBAN ORANG TUA / WALI MURID {state.classConfig.className.toUpperCase()}
-              </p>
-              <p className="text-xs text-slate-600">
-                Tahun Ajaran {state.classConfig.academicYear}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-3 pt-2 border-t border-slate-300">
-            <h4 className="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wide">
-              LAPORAN PERTANGGUNGJAWABAN KEUANGAN KAS & IURAN KELAS
-            </h4>
-            <div className="flex items-center justify-center gap-2 text-[11px] text-slate-600 mt-0.5">
-              <span>
-                Periode:{' '}
+        {/* Printable Official School Kop Surat (Satu Kop Surat Resmi) */}
+        <div className="text-center pb-3 mb-5 border-b-2 border-slate-900">
+          <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-wider font-serif">
+            {state.classConfig.schoolName || 'SMP MUHAMKA'}
+          </h3>
+          <p className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wide mt-0.5">
+            PAGUYUBAN ORANG TUA / WALI MURID {state.classConfig.className.toUpperCase()}
+          </p>
+          <p className="text-xs text-slate-600 mt-0.5">
+            Tahun Ajaran {state.classConfig.academicYear}
+          </p>
+          <div className="flex items-center justify-center gap-2 text-[11px] text-slate-600 mt-1">
+            <span>
+              Periode:{' '}
+              <strong className="text-slate-800 font-semibold">
                 {selectedMonth === 'all'
                   ? 'Semua Transaksi'
                   : academicMonths.find((m) => m.monthKey === selectedMonth)?.monthLabel || selectedMonth}
-              </span>
-              <span>•</span>
-              <span>Dicetak pada: {todayFormatted}</span>
-            </div>
+              </strong>
+            </span>
+            <span>•</span>
+            <span>
+              Dicetak pada:{' '}
+              <strong className="text-slate-800 font-semibold">{todayFormatted}</strong>
+            </span>
           </div>
+        </div>
+
+        {/* Judul Dokumen Laporan (Di Luar Kop Surat) */}
+        <div className="text-center mb-5">
+          <h4 className="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wide">
+            LAPORAN PERTANGGUNGJAWABAN KEUANGAN KAS & IURAN KELAS
+          </h4>
         </div>
 
         {/* Financial Summary Highlight Box */}

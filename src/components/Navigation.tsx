@@ -71,7 +71,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop / Tablet Navigation Bar */}
-      <div className="hidden md:block bg-white border-b border-slate-200 sticky top-[61px] z-20">
+      <div className="hidden md:block bg-white border-b border-slate-200 sticky top-[61px] z-20 print:hidden">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <nav className="flex items-center space-x-1 py-1.5 overflow-x-auto scrollbar-none">
             {visibleTabs.map((tab) => {
@@ -137,7 +137,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       </div>
 
       {/* Mobile Bottom Navigation Bar (App Bar) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg px-2 py-1.5 pb-safe">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg px-2 py-1.5 pb-safe print:hidden">
         <nav
           className="grid gap-1 items-center"
           style={{

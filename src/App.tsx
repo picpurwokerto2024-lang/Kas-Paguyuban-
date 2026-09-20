@@ -150,7 +150,7 @@ export function App() {
 
       {/* Admin Quick Switch Preview Bar */}
       {isAdminUnlocked && (
-        <div className="bg-emerald-800 text-white px-3 sm:px-6 py-1.5 flex items-center justify-between text-xs shadow-xs">
+        <div className="bg-emerald-800 text-white px-3 sm:px-6 py-1.5 flex items-center justify-between text-xs shadow-xs print:hidden">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-300" />
             <span className="font-semibold">
@@ -179,7 +179,7 @@ export function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5 print:p-0 print:m-0 print:max-w-none print:w-full print:bg-white">
         {/* If in Public / Wali Murid Mode: Show the dedicated transparent dashboard */}
         {isShowingWaliMuridView ? (
           <WaliMuridView

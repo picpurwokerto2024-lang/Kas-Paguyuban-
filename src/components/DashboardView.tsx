@@ -146,116 +146,119 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {activeSlide === 0 && (
         <div className="space-y-4 animate-in fade-in duration-300">
           {/* Main Financial Balance Hero Card with Japanese Sakura Falling Screensaver */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-rose-950/80 to-slate-900 text-white p-4 sm:p-6 shadow-xl border border-rose-500/30">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-rose-950/80 to-slate-900 text-white p-3.5 sm:p-6 shadow-xl border border-rose-500/30">
             {/* Japanese Sakura Screensaver Falling Petals & Fuji Silhouette */}
             <SakuraFallingCanvas />
 
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs sm:text-sm font-semibold text-rose-200 flex items-center gap-1.5 bg-rose-950/60 px-2.5 py-1 rounded-full border border-rose-500/30 backdrop-blur-xs">
-                    <span className="text-sm">🌸</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
+                  <span className="text-[11px] sm:text-sm font-semibold text-rose-200 flex items-center gap-1 sm:gap-1.5 bg-rose-950/70 px-2.5 py-1 rounded-full border border-rose-500/30 backdrop-blur-xs">
+                    <span className="text-xs sm:text-sm">🌸</span>
                     <Wallet className="w-3.5 h-3.5 text-rose-300" />
-                    <span>Total Saldo Kas {state.classConfig.className}</span>
-                    <span className="text-[10px] text-rose-300/80 font-normal">桜 • Mode Pengurus</span>
+                    <span>Total Saldo Kas {state.classConfig.className || 'Paguyuban'}</span>
+                    <span className="text-[9px] sm:text-[10px] text-rose-300/80 font-normal">桜 • Pengurus</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-900/50 text-rose-200 border border-rose-400/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-900/60 text-rose-200 border border-rose-400/30">
                     Real-Time
                   </span>
                 </div>
 
-                <div className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(244,63,94,0.35)] mt-1.5">
+                <div className="text-2xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_8px_rgba(244,63,94,0.35)] mt-1">
                   {formatRupiah(totals.balance)}
                 </div>
 
-                <p className="text-xs text-rose-200/80 mt-1">
-                  Tersedia Bebas: <strong className="text-white">{formatRupiah(totals.unallocatedCash)}</strong>
+                <div className="flex items-center gap-2 flex-wrap text-xs text-rose-200/85 mt-1">
+                  <span>
+                    Tersedia Bebas: <strong className="text-white">{formatRupiah(totals.unallocatedCash)}</strong>
+                  </span>
                   {totals.allocatedSavings > 0 && (
-                    <span className="ml-2 text-amber-200">
-                      (Target Celengan: {formatRupiah(totals.allocatedSavings)})
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-amber-950/60 text-amber-200 border border-amber-500/30">
+                      Target Celengan: {formatRupiah(totals.allocatedSavings)}
                     </span>
                   )}
-                </p>
+                </div>
               </div>
 
-              {/* Quick Action Buttons on Hero */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Quick Action Buttons on Hero - Optimized 2x2 Grid for Mobile Android & Row on Desktop */}
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mt-2 sm:mt-0">
                 <button
                   id="hero-quick-jimpitan"
                   onClick={() => setActiveSlide(1)}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs shadow-sm transition active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs shadow-sm transition active:scale-95 border border-amber-300/50"
                 >
-                  <Coins className="w-4 h-4" />
-                  <span>Cek / Catat Iuran</span>
-                </button>
-
-                <button
-                  id="hero-add-expense"
-                  onClick={() => onOpenAddTransaction('expense')}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 font-semibold text-xs border border-rose-400/30 backdrop-blur-xs transition active:scale-95"
-                >
-                  <TrendingDown className="w-4 h-4 text-rose-300" />
-                  <span>Pengeluaran</span>
+                  <Coins className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Cek / Catat Iuran</span>
                 </button>
 
                 <button
                   id="hero-add-income"
                   onClick={() => onOpenAddTransaction('income')}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-100 font-semibold text-xs border border-emerald-400/30 backdrop-blur-xs transition active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-100 font-semibold text-xs border border-emerald-400/40 backdrop-blur-xs transition active:scale-95 shadow-xs"
                 >
-                  <PlusCircle className="w-4 h-4 text-emerald-300" />
-                  <span>Pemasukan</span>
+                  <PlusCircle className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span className="truncate">+ Pemasukan</span>
+                </button>
+
+                <button
+                  id="hero-add-expense"
+                  onClick={() => onOpenAddTransaction('expense')}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-rose-500/25 hover:bg-rose-500/35 text-rose-100 font-semibold text-xs border border-rose-400/40 backdrop-blur-xs transition active:scale-95 shadow-xs"
+                >
+                  <TrendingDown className="w-4 h-4 text-rose-300 shrink-0" />
+                  <span className="truncate">- Pengeluaran</span>
                 </button>
 
                 <button
                   id="hero-share-wa"
                   onClick={() => setShowShareModal(true)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-xs transition active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-teal-500/25 hover:bg-teal-500/35 text-teal-100 font-semibold text-xs border border-teal-400/40 backdrop-blur-xs transition active:scale-95 shadow-xs"
                   title="Kirim Laporan Kas ke WhatsApp"
                 >
-                  <Share2 className="w-4 h-4 text-emerald-300" />
+                  <Share2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span className="truncate">Bagikan WA</span>
                 </button>
               </div>
             </div>
 
             {/* Quick 3-Column Summary Cards with Glassmorphism Sakura Touch */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3 border-t border-rose-500/20">
-              <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mt-3.5 pt-3 border-t border-rose-500/20">
+              <div className="bg-slate-900/70 backdrop-blur-md p-2 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-1 text-emerald-200 text-[10px] sm:text-[11px] font-medium">
                   <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span className="truncate">Total Masuk</span>
                 </div>
-                <div className="text-xs sm:text-base font-bold text-emerald-300 mt-0.5 truncate">
+                <div className="text-xs sm:text-base font-bold text-emerald-300 mt-1 truncate">
                   +{formatRupiah(totals.totalIncome)}
                 </div>
-                <span className="text-[10px] text-emerald-300/70 hidden sm:inline truncate">
+                <span className="text-[9px] sm:text-[10px] text-emerald-300/70 truncate hidden xs:inline mt-0.5">
                   Iuran: {formatRupiah(totals.jimpitanTotal)}
                 </span>
               </div>
 
-              <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+              <div className="bg-slate-900/70 backdrop-blur-md p-2 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-1 text-rose-200 text-[10px] sm:text-[11px] font-medium">
                   <TrendingDown className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                   <span className="truncate">Pengeluaran</span>
                 </div>
-                <div className="text-xs sm:text-base font-bold text-rose-300 mt-0.5 truncate">
+                <div className="text-xs sm:text-base font-bold text-rose-300 mt-1 truncate">
                   -{formatRupiah(totals.totalExpense)}
                 </div>
-                <span className="text-[10px] text-rose-300/70 hidden sm:inline truncate">
-                  {state.transactions.filter((t) => t.type === 'expense').length} Transaksi Keluar
+                <span className="text-[9px] sm:text-[10px] text-rose-300/70 truncate hidden xs:inline mt-0.5">
+                  {state.transactions.filter((t) => t.type === 'expense').length} Transaksi
                 </span>
               </div>
 
-              <div className="bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs">
+              <div className="bg-slate-900/70 backdrop-blur-md p-2 sm:p-3 rounded-xl border border-rose-500/20 shadow-xs flex flex-col justify-between">
                 <div className="flex items-center gap-1 text-amber-200 text-[10px] sm:text-[11px] font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                   <span className="truncate">Kas Bebas</span>
                 </div>
-                <div className="text-xs sm:text-base font-bold text-white mt-0.5 truncate">
+                <div className="text-xs sm:text-base font-bold text-white mt-1 truncate">
                   {formatRupiah(totals.unallocatedCash)}
                 </div>
-                <span className="text-[10px] text-amber-200/70 hidden sm:inline truncate">
-                  Siap digunakan
+                <span className="text-[9px] sm:text-[10px] text-amber-200/70 truncate hidden xs:inline mt-0.5">
+                  Siap dipakai
                 </span>
               </div>
             </div>

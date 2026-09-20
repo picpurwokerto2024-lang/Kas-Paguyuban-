@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { AppState, TotalsInfo, StudentSummaryMetric, ExpenseCategory, IncomeCategory } from '../types';
 import { formatRupiah, formatDateIndo, getCategoryLabel, getTodayDateStr } from '../services/utils';
+import { getCurrentMonthKey, getMonthlyStatusSummary, getAcademicMonthsList } from '../services/monthlyKas';
 import { MonthlyKasCard } from './MonthlyKasCard';
 import { MonthlyFinanceChart } from './MonthlyFinanceChart';
 import { SakuraFallingCanvas } from './SakuraFallingCanvas';
@@ -48,12 +49,40 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
   const [showShareModal, setShowShareModal] = useState(false);
   const [totalSubTab, setTotalSubTab] = useState<'rincian' | 'grafik'>('rincian');
 
-  const activeStudentsCount = totals.activeStudentsCount || state.students.filter((s) => s.isActive).length;
-  const currentMonthLabel = totals.currentMonthLabel || 'Bulan Ini';
+  // Dynamic Month Selection for Slide 2 (Iuran Kas) - updates all bars and cards reactively
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string>(() => getCurrentMonthKey());
+
+  const academicMonths = useMemo(() => {
+    return getAcademicMonthsList(state.classConfig?.academicYear);
+  }, [state.classConfig?.academicYear]);
+
+  const currentMonthIdx = academicMonths.findIndex((m) => m.monthKey === selectedMonthKey);
+
+  const goToPrevMonth = () => {
+    if (currentMonthIdx > 0) {
+      setSelectedMonthKey(academicMonths[currentMonthIdx - 1].monthKey);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (currentMonthIdx < academicMonths.length - 1) {
+      setSelectedMonthKey(academicMonths[currentMonthIdx + 1].monthKey);
+    }
+  };
+
+  // Calculations for Slide 2 / Iuran - DYNAMICALLY updates whenever selectedMonthKey changes!
+  const selectedMonthSummary = useMemo(() => {
+    return getMonthlyStatusSummary(state, selectedMonthKey);
+  }, [state, selectedMonthKey]);
+
+  const currentMonthLabel = selectedMonthSummary.monthLabel;
   const defaultKasAmount = state.classConfig.defaultAmount || 10000;
-  const monthCollected = totals.jimpitanThisMonth ?? totals.jimpitanTotal;
-  const monthTarget = activeStudentsCount * defaultKasAmount;
-  const monthProgress = totals.thisMonthProgress ?? (monthTarget > 0 ? Math.min(100, Math.round((monthCollected / monthTarget) * 100)) : 0);
+  const monthCollected = selectedMonthSummary.totalPaidAmount;
+  const monthProgress = selectedMonthSummary.paidPercentage;
+  const monthPaidCount = selectedMonthSummary.paidCount;
+  const monthUnpaidCount = selectedMonthSummary.unpaidCount;
+  const monthUnpaidAmount = selectedMonthSummary.totalUnpaidAmount;
+  const activeStudentsCount = selectedMonthSummary.totalActiveStudents || totals.activeStudentsCount || state.students.filter((s) => s.isActive).length;
 
   // Breakdown by expense category
   const expenseByCategory = useMemo(() => {
@@ -472,15 +501,41 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
       {activeSlide === 1 && (
         <div className="space-y-4 animate-in fade-in duration-300">
           {/* Dashboard Iuran Hero Card */}
-          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-950 via-amber-900 to-slate-950 text-white p-4 sm:p-6 shadow-md border border-amber-700/40 relative overflow-hidden">
+          <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-950 via-amber-900 to-slate-950 text-white p-3.5 sm:p-6 shadow-md border border-amber-700/40 relative overflow-hidden">
             <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl pointer-events-none" />
 
             <div className="relative z-10">
-              <div className="flex items-center justify-between text-amber-200 text-xs mb-1">
-                <span className="font-semibold flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-amber-300" />
-                  Dashboard Iuran Kas ({currentMonthLabel})
-                </span>
+              <div className="flex items-center justify-between text-amber-200 text-xs mb-1.5 flex-wrap gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold flex items-center gap-1.5 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-500/30">
+                    <Coins className="w-4 h-4 text-amber-300" />
+                    <span>Bar Iuran Kas: <strong className="text-amber-200">{currentMonthLabel}</strong></span>
+                  </span>
+
+                  {/* Quick Month Navigation Controls directly in Hero */}
+                  <div className="inline-flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-amber-500/30">
+                    <button
+                      onClick={goToPrevMonth}
+                      disabled={currentMonthIdx <= 0}
+                      className="p-1 rounded text-amber-200 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+                      title="Bulan sebelumnya"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-bold text-amber-300 px-1 font-mono">
+                      {currentMonthIdx + 1}/{academicMonths.length}
+                    </span>
+                    <button
+                      onClick={goToNextMonth}
+                      disabled={currentMonthIdx >= academicMonths.length - 1}
+                      className="p-1 rounded text-amber-200 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition"
+                      title="Bulan berikutnya"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
                 <span className="text-[10px] bg-amber-500/20 text-amber-200 border border-amber-400/30 px-2 py-0.5 rounded-full font-medium">
                   Tarif: {formatRupiah(defaultKasAmount)} / siswa
                 </span>
@@ -491,65 +546,65 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
                   {formatRupiah(monthCollected)}
                 </span>
                 <span className="text-xs sm:text-sm text-amber-200/80 font-medium">
-                  terkumpul bulan ini
+                  terkumpul bulan {currentMonthLabel}
                 </span>
               </div>
 
               {/* Visual Progress Bar of Monthly Collection */}
-              <div className="mt-3 bg-black/25 p-2.5 sm:p-3 rounded-xl border border-white/10 space-y-1.5">
+              <div className="mt-3 bg-black/30 p-2.5 sm:p-3 rounded-xl border border-white/10 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-amber-200 font-semibold flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    Capaian Iuran: {totals.thisMonthPaidCount ?? 0} dari {activeStudentsCount} Siswa
+                    Capaian Iuran: {monthPaidCount} dari {activeStudentsCount} Siswa
                   </span>
                   <span className="font-bold text-amber-300">{monthProgress}% Lunas</span>
                 </div>
 
                 <div className="w-full h-2.5 rounded-full bg-white/15 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-700 rounded-full"
+                    className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500 rounded-full"
                     style={{ width: `${monthProgress}%` }}
                   />
                 </div>
               </div>
 
               {/* 3-Column Specific Breakdown for Iuran */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3">
-                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mt-3">
+                <div className="bg-white/10 backdrop-blur-xs p-2 sm:p-3 rounded-xl border border-white/10 flex flex-col justify-between">
                   <div className="flex items-center gap-1 text-emerald-200 text-[10px] sm:text-[11px] font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                     <span className="truncate">Sudah Lunas</span>
                   </div>
-                  <div className="text-xs sm:text-base font-bold text-emerald-300 mt-0.5 truncate">
-                    {totals.thisMonthPaidCount ?? 0} Siswa
+                  <div className="text-xs sm:text-base font-bold text-emerald-300 mt-1 truncate">
+                    {monthPaidCount} Siswa
                   </div>
-                  <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">
-                    {formatRupiah((totals.thisMonthPaidCount ?? 0) * defaultKasAmount)}
+                  <div className="text-[9px] sm:text-[10px] text-emerald-200/80 truncate mt-0.5">
+                    {formatRupiah(monthCollected)}
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+                <div className="bg-white/10 backdrop-blur-xs p-2 sm:p-3 rounded-xl border border-white/10 flex flex-col justify-between">
                   <div className="flex items-center gap-1 text-rose-200 text-[10px] sm:text-[11px] font-medium">
                     <AlertCircle className="w-3.5 h-3.5 text-rose-300 shrink-0" />
                     <span className="truncate">Belum Setor</span>
                   </div>
-                  <div className="text-xs sm:text-base font-bold text-rose-300 mt-0.5 truncate">
-                    {totals.thisMonthUnpaidCount ?? 0} Siswa
+                  <div className="text-xs sm:text-base font-bold text-rose-300 mt-1 truncate">
+                    {monthUnpaidCount} Siswa
                   </div>
-                  <div className="text-[10px] text-rose-200/80 mt-0.5 truncate">
-                    Sisa: {formatRupiah((totals.thisMonthUnpaidCount ?? 0) * defaultKasAmount)}
+                  <div className="text-[9px] sm:text-[10px] text-rose-200/80 truncate mt-0.5">
+                    Sisa: {formatRupiah(monthUnpaidAmount)}
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-white/10">
+                <div className="bg-white/10 backdrop-blur-xs p-2 sm:p-3 rounded-xl border border-white/10 flex flex-col justify-between">
                   <div className="flex items-center gap-1 text-amber-200 text-[10px] sm:text-[11px] font-medium">
                     <Users className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                     <span className="truncate">Total Siswa</span>
                   </div>
-                  <div className="text-xs sm:text-base font-bold text-white mt-0.5 truncate">
+                  <div className="text-xs sm:text-base font-bold text-white mt-1 truncate">
                     {activeStudentsCount} Orang
                   </div>
-                  <div className="text-[10px] text-amber-300/80 mt-0.5 truncate">
+                  <div className="text-[9px] sm:text-[10px] text-amber-300/80 truncate mt-0.5">
                     Kelas Aktif
                   </div>
                 </div>
@@ -561,6 +616,8 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
           <MonthlyKasCard
             state={state}
             isAdmin={false}
+            selectedMonthKey={selectedMonthKey}
+            onSelectMonthKey={setSelectedMonthKey}
             title="Status Iuran Kas Per Bulan & Daftar Belum Setoran"
             subtitle="Pilih bulan untuk melihat siapa saja yang sudah lunas atau belum menyetor kas"
           />

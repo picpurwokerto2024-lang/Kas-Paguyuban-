@@ -39,6 +39,8 @@ interface MonthlyKasCardProps {
   onResetMonth?: (monthKey: string) => void;
   title?: string;
   subtitle?: string;
+  selectedMonthKey?: string;
+  onSelectMonthKey?: (monthKey: string) => void;
 }
 
 export const MonthlyKasCard: React.FC<MonthlyKasCardProps> = ({
@@ -49,8 +51,20 @@ export const MonthlyKasCard: React.FC<MonthlyKasCardProps> = ({
   onResetMonth,
   title = 'Riwayat & Rekap Iuran Kas Per Bulan',
   subtitle = 'Daftar transparansi siswa yang sudah dan belum setoran kas bulanan',
+  selectedMonthKey: controlledMonthKey,
+  onSelectMonthKey,
 }) => {
-  const [selectedMonthKey, setSelectedMonthKey] = useState<string>(() => getCurrentMonthKey());
+  const [internalMonthKey, setInternalMonthKey] = useState<string>(() => getCurrentMonthKey());
+  const selectedMonthKey = controlledMonthKey !== undefined ? controlledMonthKey : internalMonthKey;
+
+  const handleSelectMonth = (monthKey: string) => {
+    if (onSelectMonthKey) {
+      onSelectMonthKey(monthKey);
+    } else {
+      setInternalMonthKey(monthKey);
+    }
+  };
+
   const [statusFilter, setStatusFilter] = useState<'unpaid' | 'paid' | 'all'>('unpaid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentHistory, setSelectedStudentHistory] = useState<Student | null>(null);
@@ -71,13 +85,13 @@ export const MonthlyKasCard: React.FC<MonthlyKasCardProps> = ({
 
   const goToPrevMonth = () => {
     if (currentMonthIdx > 0) {
-      setSelectedMonthKey(academicMonths[currentMonthIdx - 1].monthKey);
+      handleSelectMonth(academicMonths[currentMonthIdx - 1].monthKey);
     }
   };
 
   const goToNextMonth = () => {
     if (currentMonthIdx < academicMonths.length - 1) {
-      setSelectedMonthKey(academicMonths[currentMonthIdx + 1].monthKey);
+      handleSelectMonth(academicMonths[currentMonthIdx + 1].monthKey);
     }
   };
 
@@ -190,7 +204,7 @@ export const MonthlyKasCard: React.FC<MonthlyKasCardProps> = ({
               return (
                 <button
                   key={m.monthKey}
-                  onClick={() => setSelectedMonthKey(m.monthKey)}
+                  onClick={() => handleSelectMonth(m.monthKey)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border ${
                     isSelected
                       ? 'bg-teal-800 text-white border-teal-800 shadow-xs'

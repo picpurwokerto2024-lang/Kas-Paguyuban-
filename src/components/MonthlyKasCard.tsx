@@ -248,64 +248,7 @@ export const MonthlyKasCard: React.FC<MonthlyKasCardProps> = ({
         </div>
       </div>
 
-      {/* 2. Monthly Stats Summary Dashboard Widget */}
-      <div className="p-4 sm:p-5 bg-gradient-to-br from-slate-900 to-teal-950 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-teal-300">
-                Rekap Kas Bulan: {summary.monthLabel}
-              </span>
-              <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-teal-200 border border-white/10">
-                Tarif: {formatRupiah(state.classConfig.defaultAmount)}/bln
-              </span>
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-white mt-0.5 flex items-baseline gap-2">
-              <span>{formatRupiah(summary.totalPaidAmount)}</span>
-              <span className="text-xs text-teal-300/80 font-normal">
-                dari target {formatRupiah(summary.totalExpectedAmount)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="bg-white/10 p-2.5 rounded-xl border border-white/10 text-center min-w-[90px]">
-              <span className="text-[10px] text-emerald-300 block font-medium">Sudah Bayar</span>
-              <span className="text-base font-bold text-emerald-300">
-                {summary.paidCount} <span className="text-[11px] font-normal text-white/70">siswa</span>
-              </span>
-            </div>
-
-            <div className="bg-white/10 p-2.5 rounded-xl border border-white/10 text-center min-w-[90px]">
-              <span className="text-[10px] text-rose-300 block font-medium">Belum Bayar</span>
-              <span className="text-base font-bold text-rose-300">
-                {summary.unpaidCount} <span className="text-[11px] font-normal text-white/70">siswa</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-3.5 space-y-1.5">
-          <div className="flex justify-between text-xs text-teal-200 font-semibold">
-            <span>
-              Tingkat Kepatuhan: {summary.paidCount}/{summary.totalActiveStudents} Siswa
-            </span>
-            <span className="text-emerald-300 font-bold">{summary.paidPercentage}% Lunas</span>
-          </div>
-
-          <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden border border-white/10">
-            <div
-              className={`h-full transition-all duration-500 rounded-full ${
-                summary.paidPercentage === 100 ? 'bg-emerald-400' : 'bg-teal-400'
-              }`}
-              style={{ width: `${summary.paidPercentage}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Search Bar & Status Filter Tabs */}
+      {/* 2. Search Bar & Status Filter Tabs */}
       <div className="p-4 border-b border-slate-100 bg-white space-y-3">
         {/* Search input */}
         <div className="relative">

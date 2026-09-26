@@ -35,12 +35,52 @@
         }
       },
       "required": ["classConfig", "students", "jimpitanRecords", "transactions"]
+    },
+    "VisitorPresence": {
+      "title": "VisitorPresence",
+      "description": "Real-time presence and activity tracking for parents/wali murid opening the PWA",
+      "type": "object",
+      "properties": {
+        "visitorId": {
+          "type": "string",
+          "description": "Unique identifier of the visitor session or device"
+        },
+        "role": {
+          "type": "string",
+          "description": "User role: wali_murid or pengurus"
+        },
+        "device": {
+          "type": "string",
+          "description": "Device platform description (e.g. HP Android, iPhone, PC)"
+        },
+        "openedAt": {
+          "type": "string",
+          "description": "Timestamp when the app was opened"
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "Timestamp of the last heartbeat ping"
+        },
+        "isOnline": {
+          "type": "boolean",
+          "description": "Whether the session is currently active"
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "Date string YYYY-MM-DD for daily visit counting"
+        }
+      },
+      "required": ["visitorId", "role", "lastSeen"]
     }
   },
   "firestore": {
     "/classes/{classId}": {
       "schema": "ClassData",
       "description": "Collection of synchronized class cash book datasets"
+    },
+    "/classes/{classId}/presence/{visitorId}": {
+      "schema": "VisitorPresence",
+      "description": "Real-time presence session records for wali murid and viewers"
     }
   }
 }

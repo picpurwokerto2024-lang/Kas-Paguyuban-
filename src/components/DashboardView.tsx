@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { AppState, TotalsInfo, TabType, PaymentMethod } from '../types';
-import { formatRupiah, formatDateIndo, getCategoryLabel } from '../services/utils';
+import { AppState, TotalsInfo, TabType, PaymentMethod, VisitorStats } from '../types';
+import { formatRupiah, formatDateIndo, getCategoryLabel, timeAgoIndo } from '../services/utils';
 import { createWeeklyKasReportMessage, openWhatsAppDirect } from '../services/whatsapp';
 import { getCurrentMonthKey, getMonthlyStatusSummary, getAcademicMonthsList } from '../services/monthlyKas';
 import { MonthlyFinanceChart } from './MonthlyFinanceChart';
@@ -24,6 +24,8 @@ import {
   Users,
   BarChart3,
   Calendar,
+  Eye,
+  Radio,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -35,6 +37,7 @@ interface DashboardViewProps {
   onToggleMonthlyStatus?: (studentId: string, month: string, customAmt?: number, method?: PaymentMethod) => void;
   onMarkAllPaidMonth?: (month: string, method?: PaymentMethod) => void;
   onResetMonth?: (month: string) => void;
+  visitorStats?: VisitorStats;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -45,6 +48,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onToggleMonthlyStatus,
   onMarkAllPaidMonth,
   onResetMonth,
+  visitorStats,
 }) => {
   // Slide Switcher for Admin Mode Dashboard: Slide 0 (Dashboard Total) vs Slide 1 (Dashboard Iuran)
   const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
@@ -130,6 +134,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-20 md:pb-6">
+      {/* Live Wali Murid Presence Monitor Banner in Admin Mode */}
+      {visitorStats && (
+        <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 border border-emerald-500/40 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2 text-xs text-emerald-100 shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+            </span>
+            <div className="min-w-0 truncate">
+              <span className="font-bold text-white">Pantauan Wali Murid:</span>{' '}
+              <span className="text-emerald-200">
+                {visitorStats.onlineWaliMuridCount > 0
+                  ? `Ada ${visitorStats.onlineWaliMuridCount} wali murid sedang aktif membuka aplikasi saat ini.`
+                  : 'Belum ada wali murid yang sedang membuka aplikasi saat ini.'}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] text-emerald-300/90 hidden sm:inline">
+              {visitorStats.lastWaliMuridOpenedAt
+                ? `Terakhir: ${timeAgoIndo(visitorStats.lastWaliMuridOpenedAt)}`
+                : `Total hari ini: ${visitorStats.todayVisitCount} kunjungan`}
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              Live Monitor
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* 1. Main Slide Switcher Tabs (Slide 1: Dashboard Total vs Slide 2: Dashboard Iuran) */}
       <div className="bg-slate-200/90 p-1 rounded-2xl flex items-center justify-between gap-1 shadow-xs border border-slate-300/60">
         <button

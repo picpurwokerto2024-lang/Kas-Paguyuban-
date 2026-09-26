@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClassConfig } from '../types';
+import { ClassConfig, VisitorStats } from '../types';
 import {
   Calendar,
   School,
@@ -19,6 +19,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { formatDateIndo } from '../services/utils';
+import { VisitorPresenceIndicator } from './VisitorPresenceIndicator';
 
 interface HeaderProps {
   classConfig?: ClassConfig;
@@ -28,6 +29,8 @@ interface HeaderProps {
   onOpenSettings: () => void;
   syncStatus?: 'synced' | 'syncing' | 'offline' | 'error';
   onManualSync?: () => void;
+  visitorStats?: VisitorStats;
+  myVisitorId?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,6 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   syncStatus = 'synced',
   onManualSync,
+  visitorStats,
+  myVisitorId = '',
 }) => {
   const todayStr = formatDateIndo(new Date().toISOString().split('T')[0]);
   const classNameDisplay = classConfig?.className || 'Kas Kelas';
@@ -194,8 +199,17 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right: Actions (Bagikan Link, Instal App, Muat Ulang, Login/Mode Toggle) */}
+          {/* Right: Actions (Indikator Akses Wali Murid, Bagikan Link, Instal App, Muat Ulang, Login/Mode Toggle) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Live Visitor / Wali Murid Presence Indicator */}
+            {visitorStats && (
+              <VisitorPresenceIndicator
+                stats={visitorStats}
+                isAdminUnlocked={isAdminUnlocked}
+                myVisitorId={myVisitorId}
+              />
+            )}
+
             {/* 1. Tombol Bagikan Link (Di Semua Mode) */}
             <button
               onClick={handleNativeShare}

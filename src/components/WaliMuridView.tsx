@@ -18,7 +18,7 @@ import {
   ChevronRight,
   Users,
 } from 'lucide-react';
-import { AppState, TotalsInfo, StudentSummaryMetric, ExpenseCategory, IncomeCategory } from '../types';
+import { AppState, TotalsInfo, StudentSummaryMetric, ExpenseCategory, IncomeCategory, VisitorStats } from '../types';
 import { formatRupiah, formatDateIndo, getCategoryLabel, getTodayDateStr } from '../services/utils';
 import { getCurrentMonthKey, getMonthlyStatusSummary, getAcademicMonthsList } from '../services/monthlyKas';
 import { MonthlyKasCard } from './MonthlyKasCard';
@@ -32,6 +32,7 @@ interface WaliMuridViewProps {
   onRequestAdminLogin: () => void;
   syncStatus: 'synced' | 'syncing' | 'offline' | 'error';
   lastSyncedAt: Date | null;
+  visitorStats?: VisitorStats;
 }
 
 export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
@@ -41,6 +42,7 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
   onRequestAdminLogin,
   syncStatus,
   lastSyncedAt,
+  visitorStats,
 }) => {
   // Slide Switcher: 0 = Dashboard Total (Kas Umum, Transaksi, Grafik), 1 = Dashboard Iuran (Progress & Status Per Bulan sampai bawah)
   const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
@@ -167,6 +169,28 @@ export const WaliMuridView: React.FC<WaliMuridViewProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 max-w-4xl mx-auto">
+      {/* Live Presence / Wali Murid Active Notification Banner */}
+      {visitorStats && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/90 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2 text-xs text-emerald-900 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="truncate">
+              <strong>Transparansi Real-Time:</strong>{' '}
+              {visitorStats.onlineWaliMuridCount > 1
+                ? `Ada ${visitorStats.onlineWaliMuridCount} wali murid yang sedang membuka kas bersama Anda`
+                : `Aplikasi kas kelas ini sedang aktif dibuka`}
+            </span>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Online</span>
+          </span>
+        </div>
+      )}
+
       {/* 2. Main Slide Switcher Tabs (Slide 1 vs Slide 2) */}
       <div className="bg-slate-200/90 p-1 rounded-2xl flex items-center justify-between gap-1 shadow-xs border border-slate-300/60">
         <button

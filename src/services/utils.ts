@@ -86,3 +86,25 @@ export function exportToCSV(filename: string, rows: string[][]): void {
   link.click();
   document.body.removeChild(link);
 }
+
+export function formatTimeIndo(isoStr: string): string {
+  if (!isoStr) return '-';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+}
+
+export function timeAgoIndo(dateInput: string | Date | number): string {
+  if (!dateInput) return '-';
+  const date = typeof dateInput === 'string' ? new Date(dateInput).getTime() : typeof dateInput === 'number' ? dateInput : dateInput.getTime();
+  const now = Date.now();
+  const diffSec = Math.max(0, Math.floor((now - date) / 1000));
+
+  if (diffSec < 15) return 'Baru saja';
+  if (diffSec < 60) return `${diffSec} detik lalu`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} menit lalu`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours} jam lalu`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} hari lalu`;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { AppState, ClassConfig, FrequencyType, TabType, CustomNavBarItem } from '../types';
 import { formatRupiah } from '../services/utils';
+import { APP_THEMES, AppThemeOption } from '../services/themes';
 import {
   Settings,
   School,
@@ -23,6 +24,9 @@ import {
   Layers,
   ExternalLink,
   Sparkles,
+  Palette,
+  Image as ImageIcon,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -47,7 +51,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     adminPin: state.classConfig.adminPin || '1234',
     enabledTabs: state.classConfig.enabledTabs || ['dashboard', 'jimpitan', 'kas', 'siswa', 'celengan', 'laporan'],
     customNavBars: state.classConfig.customNavBars || [],
+    themeId: state.classConfig.themeId || 'default',
   });
+  const [selectedThemeCategory, setSelectedThemeCategory] = useState<'all' | 'sakura' | 'alam'>('all');
   const [showPin, setShowPin] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -454,6 +460,158 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* 4. Theme & Nature / Real Sakura Wallpaper Settings */}
+        <div className="pt-4 border-t border-slate-100 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2">
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-pink-600" />
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <span>Tema & Foto Latar Belakang</span>
+                  <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700">
+                    Sakura & Alam Asli
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Pilih tampilan latar belakang aplikasi dengan foto asli alam dan bunga sakura mekar
+                </p>
+              </div>
+            </div>
+
+            {/* Category Filter Chips */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+              <button
+                type="button"
+                onClick={() => setSelectedThemeCategory('all')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                  selectedThemeCategory === 'all'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedThemeCategory('sakura')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 ${
+                  selectedThemeCategory === 'sakura'
+                    ? 'bg-pink-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🌸</span>
+                <span>Sakura Asli</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedThemeCategory('alam')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 ${
+                  selectedThemeCategory === 'alam'
+                    ? 'bg-emerald-700 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🌲</span>
+                <span>Foto Alam</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Themes Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {APP_THEMES.filter((theme) => {
+              if (selectedThemeCategory === 'all') return true;
+              return theme.category === selectedThemeCategory;
+            }).map((theme) => {
+              const isSelected = (config.themeId || 'default') === theme.id;
+
+              return (
+                <div
+                  key={theme.id}
+                  onClick={() => {
+                    const newConfig = { ...config, themeId: theme.id };
+                    setConfig(newConfig);
+                    onUpdateConfig({ themeId: theme.id });
+                  }}
+                  className={`group relative rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-200 flex flex-col ${
+                    isSelected
+                      ? 'border-pink-500 shadow-md ring-2 ring-pink-400/20 bg-pink-50/20'
+                      : 'border-slate-200 hover:border-pink-300 bg-white hover:shadow-xs'
+                  }`}
+                >
+                  {/* Thumbnail / Image Preview */}
+                  <div className="relative h-28 w-full bg-slate-900 overflow-hidden">
+                    {theme.image ? (
+                      <img
+                        src={theme.image}
+                        alt={theme.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-slate-800 via-teal-900 to-slate-900 flex flex-col items-center justify-center text-white">
+                        <span className="text-3xl mb-1">🏛️</span>
+                        <span className="text-[11px] font-medium text-slate-300">Klasik Minimalis</span>
+                      </div>
+                    )}
+
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                    {/* Tag Badge */}
+                    <div className="absolute top-2 left-2">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/60 text-white backdrop-blur-xs border border-white/20">
+                        {theme.previewThumbnail} {theme.tag}
+                      </span>
+                    </div>
+
+                    {/* Active Selected Badge */}
+                    {isSelected && (
+                      <div className="absolute top-2 right-2 bg-pink-600 text-white p-1 rounded-full shadow-md animate-in zoom-in-75">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    )}
+
+                    {/* Theme Name on Thumbnail */}
+                    <div className="absolute bottom-2 left-2 right-2 text-white">
+                      <h4 className="text-xs font-bold leading-snug drop-shadow-xs">{theme.name}</h4>
+                    </div>
+                  </div>
+
+                  {/* Description & Action */}
+                  <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                      {theme.description}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
+                      <span
+                        className={`font-bold ${
+                          isSelected ? 'text-pink-700' : 'text-slate-400 group-hover:text-pink-600'
+                        }`}
+                      >
+                        {isSelected ? '✓ Tema Aktif Digunakan' : 'Klik untuk Terapkan'}
+                      </span>
+
+                      <button
+                        type="button"
+                        className={`px-2 py-0.5 rounded-md font-bold transition ${
+                          isSelected
+                            ? 'bg-pink-100 text-pink-800'
+                            : 'bg-slate-100 text-slate-700 group-hover:bg-pink-50 group-hover:text-pink-700'
+                        }`}
+                      >
+                        {isSelected ? 'Aktif' : 'Pilih'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

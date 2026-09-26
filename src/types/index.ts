@@ -99,6 +99,8 @@ export interface ClassConfig {
   enabledTabs?: TabType[]; // Daftar bar tab aktif yang diinginkan pengurus
   customNavBars?: CustomNavBarItem[]; // Bar menu kustom tambahan
   customExpenseCategories?: string[]; // Kategori bar pengeluaran tambahan
+  themeId?: string; // ID Tema Latar Belakang (Foto Alam, Sakura Asli, dsb.)
+  themeOverlay?: 'light' | 'medium' | 'subtle'; // Tingkat transparansi overlay
 }
 
 export interface AppState {
@@ -165,6 +167,28 @@ export interface MonthlyStatusSummary {
   paidStudents: MonthlyStudentPayment[];
   unpaidStudents: MonthlyStudentPayment[];
   allStudents: MonthlyStudentPayment[];
+}
+
+export interface VisitorPresence {
+  visitorId: string;
+  role: 'wali_murid' | 'pengurus';
+  device: string;
+  openedAt: string;
+  lastSeen: string;
+  isOnline: boolean;
+  dateKey: string;
+  label?: string;
+  page?: string;
+}
+
+export interface VisitorStats {
+  onlineWaliMuridCount: number;
+  onlinePengurusCount: number;
+  onlineTotalCount: number;
+  todayVisitCount: number;
+  lastWaliMuridOpenedAt: string | null;
+  activeVisitors: VisitorPresence[];
+  recentVisitors: VisitorPresence[];
 }
 
 
